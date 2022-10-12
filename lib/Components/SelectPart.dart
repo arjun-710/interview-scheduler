@@ -9,38 +9,78 @@ import 'package:interview_scheduler/constants.dart';
 class SelectPart extends StatelessWidget {
   final DateTime startTimeStamp;
   final DateTime endTimeStamp;
-
+  final String title;
   const SelectPart(
-      {Key? key, required this.startTimeStamp, required this.endTimeStamp})
+      {Key? key,
+      required this.startTimeStamp,
+      required this.endTimeStamp,
+      required this.title})
       : super(key: key);
 
   void getDataFromMyApi(BuildContext context, DateTime startTimeStamp,
-      DateTime endTimeStamp, List selected) async {
+      DateTime endTimeStamp, List selected, emptyFinalPart) async {
     FirebaseFirestore db = FirebaseFirestore.instance;
 
     List<Map<String, dynamic>> meetings = [];
-    List parts = [];
-    var data = await db
+    // List parts = [];
+
+    Set<dynamic> parts = Set();
+    var data1 = await db
         .collection("Meetings")
         .where("startTime", isGreaterThanOrEqualTo: startTimeStamp)
         .where("startTime", isLessThanOrEqualTo: endTimeStamp)
         .get();
 
-    for (var doc in data.docs) {
+    for (var doc in data1.docs) {
       for (var participant in doc['participants']) parts.add(participant);
     }
 
+    var data2 = await db
+        .collection("Meetings")
+        .where("endTime", isGreaterThanOrEqualTo: startTimeStamp)
+        .where("endTime", isLessThanOrEqualTo: endTimeStamp)
+        .get();
+
+    for (var doc in data2.docs) {
+      for (var participant in doc['participants']) parts.add(participant);
+    }
+
+    Set inter = Set();
+
+    var data3_1 = await db
+        .collection("Meetings")
+        .where("startTime", isLessThanOrEqualTo: startTimeStamp)
+        .get();
+
+    for (var doc in data3_1.docs) {
+      for (var participant in doc['participants']) inter.add(participant);
+    }
+
+    var data3_2 = await db
+        .collection("Meetings")
+        .where("endTime", isGreaterThanOrEqualTo: endTimeStamp)
+        .get();
+
+    for (var doc in data3_2.docs) {
+      for (var participant in doc['participants']) {
+        if (inter
+            .where((element) => element['id'] == participant['id'])
+            .isNotEmpty) {
+          parts.add(participant);
+        }
+      }
+    }
     Navigator.push(
-      context,
-      MaterialPageRoute(
-        //
-        builder: (context) => ValidateMeeting(
-            startTimeStamp: startTimeStamp,
-            endTimeStamp: endTimeStamp,
-            invalidParts: parts,
-            selectedParts: selected),
-      ),
-    );
+        context,
+        MaterialPageRoute(
+          //
+          builder: (context) => ValidateMeeting(
+              startTimeStamp: startTimeStamp,
+              endTimeStamp: endTimeStamp,
+              invalidParts: parts,
+              selectedParts: selected,
+              title: title),
+        )).then((value) => emptyFinalPart());
   }
 
   @override
@@ -67,7 +107,13 @@ class SelectPart extends StatelessWidget {
               if (_selected[i]) finalPart.add(allAds[i]);
             }
 
-            getDataFromMyApi(context, startTimeStamp, endTimeStamp, finalPart);
+            void emptyFinalPart() {
+              finalPart.clear();
+            }
+
+            getDataFromMyApi(context, startTimeStamp, endTimeStamp, finalPart,
+                emptyFinalPart);
+
             // print(finalPart);
             // Navigator.pushNamed(context, '/addMeeting');
           }),
@@ -135,7 +181,8 @@ class SelectPart extends StatelessWidget {
                               allAds.add({
                                 'name': d['name'],
                                 'id': d['id'],
-                                'age': d['age']
+                                'age': d['age'],
+                                'email': d['email'],
                               });
                               _selected.add(false);
                               // ClassificadoData(d.documentID, d.data["title"],
@@ -200,7 +247,7 @@ class _UserListState extends State<UserList> {
               // tileColor: selected[i]
               //     ? Colors.blue
               //     : null, // If current item is selected show blue color
-              title: Text('${data["name"]}'),
+              title: Text('${data["name"]} \n ${data["email"]}'),
               subtitle: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.end,

@@ -11,6 +11,7 @@ class Layout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -35,7 +36,7 @@ class Layout extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (pageText != "Home") ...[
+                      if (pageText != "Add user") ...[
                         GestureDetector(
                           onTap: () {
                             Navigator.pop(context);

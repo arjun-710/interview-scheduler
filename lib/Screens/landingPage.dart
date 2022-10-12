@@ -34,7 +34,8 @@ class _LandingPageState extends State<LandingPage> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CustomText(text: "Your Meetings"),
+              const CustomText(text: "Your Upcoming Meetings"),
+
               const SizedBox(height: 40),
               StreamBuilder<List<Meeting>>(
                 stream: readMeetings(),

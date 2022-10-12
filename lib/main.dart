@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:interview_scheduler/Screens/AddMeeting.dart';
+import 'package:interview_scheduler/Screens/Adduser.dart';
 import 'package:interview_scheduler/Screens/landingPage.dart';
 import 'package:interview_scheduler/constants.dart';
 
@@ -24,10 +25,11 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
-      initialRoute: '/landing',
+      initialRoute: '/addUser',
       routes: {
+        '/addUser': (context) => const AddUser(),
         '/landing': (context) => const LandingPage(),
-        '/addMeeting': (context) => const AddMeeting()
+        '/addMeeting': (context) => const AddMeeting(),
       },
     );
   }

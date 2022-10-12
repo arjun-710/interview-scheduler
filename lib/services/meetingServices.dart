@@ -15,8 +15,12 @@ Future createMeeting(Meeting meeting) async {
 }
 
 Stream<List<Meeting>> readMeetings() {
-  return FirebaseFirestore.instance.collection('Meetings').snapshots().map(
-      (snapshot) =>
+  return FirebaseFirestore.instance
+      .collection('Meetings')
+      .orderBy('startTime')
+      .where('startTime', isGreaterThanOrEqualTo: DateTime.now())
+      .snapshots()
+      .map((snapshot) =>
           snapshot.docs.map((doc) => Meeting.fromJson(doc.data())).toList());
 }
 
