@@ -2,11 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:interview_scheduler/Components/ShowSnackBar.dart';
 import 'package:interview_scheduler/Screens/Layout.dart';
 import 'package:interview_scheduler/Screens/ValidateMeeting.dart';
 import 'package:interview_scheduler/constants.dart';
 
-class SelectPart extends StatelessWidget {
+class SelectPart extends StatefulWidget {
   final DateTime startTimeStamp;
   final DateTime endTimeStamp;
   final String title;
@@ -17,72 +18,11 @@ class SelectPart extends StatelessWidget {
       required this.title})
       : super(key: key);
 
-  void getDataFromMyApi(BuildContext context, DateTime startTimeStamp,
-      DateTime endTimeStamp, List selected, emptyFinalPart) async {
-    FirebaseFirestore db = FirebaseFirestore.instance;
+  @override
+  State<SelectPart> createState() => _SelectPartState();
+}
 
-    List<Map<String, dynamic>> meetings = [];
-    // List parts = [];
-
-    Set<dynamic> parts = Set();
-    var data1 = await db
-        .collection("Meetings")
-        .where("startTime", isGreaterThanOrEqualTo: startTimeStamp)
-        .where("startTime", isLessThanOrEqualTo: endTimeStamp)
-        .get();
-
-    for (var doc in data1.docs) {
-      for (var participant in doc['participants']) parts.add(participant);
-    }
-
-    var data2 = await db
-        .collection("Meetings")
-        .where("endTime", isGreaterThanOrEqualTo: startTimeStamp)
-        .where("endTime", isLessThanOrEqualTo: endTimeStamp)
-        .get();
-
-    for (var doc in data2.docs) {
-      for (var participant in doc['participants']) parts.add(participant);
-    }
-
-    Set inter = Set();
-
-    var data3_1 = await db
-        .collection("Meetings")
-        .where("startTime", isLessThanOrEqualTo: startTimeStamp)
-        .get();
-
-    for (var doc in data3_1.docs) {
-      for (var participant in doc['participants']) inter.add(participant);
-    }
-
-    var data3_2 = await db
-        .collection("Meetings")
-        .where("endTime", isGreaterThanOrEqualTo: endTimeStamp)
-        .get();
-
-    for (var doc in data3_2.docs) {
-      for (var participant in doc['participants']) {
-        if (inter
-            .where((element) => element['id'] == participant['id'])
-            .isNotEmpty) {
-          parts.add(participant);
-        }
-      }
-    }
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          //
-          builder: (context) => ValidateMeeting(
-              startTimeStamp: startTimeStamp,
-              endTimeStamp: endTimeStamp,
-              invalidParts: parts,
-              selectedParts: selected,
-              title: title),
-        )).then((value) => emptyFinalPart());
-  }
-
+class _SelectPartState extends State<SelectPart> {
   @override
   Widget build(BuildContext context) {
     final Stream<QuerySnapshot> _partStream =
@@ -92,6 +32,79 @@ class SelectPart extends StatelessWidget {
     List<bool> _selected = [];
     List finalPart = [];
     Size size = MediaQuery.of(context).size;
+
+    void getDataFromMyApi(BuildContext context, DateTime startTimeStamp,
+        DateTime endTimeStamp, List selected) async {
+      FirebaseFirestore db = FirebaseFirestore.instance;
+
+      Set<dynamic> parts = Set();
+
+      var data1 = await db
+          .collection("Meetings")
+          .where("startTime", isGreaterThanOrEqualTo: startTimeStamp)
+          .where("startTime", isLessThanOrEqualTo: endTimeStamp)
+          .get();
+
+      for (var doc in data1.docs) {
+        for (var participant in doc['participants']) parts.add(participant);
+      }
+
+      var data2 = await db
+          .collection("Meetings")
+          .where("endTime", isGreaterThanOrEqualTo: startTimeStamp)
+          .where("endTime", isLessThanOrEqualTo: endTimeStamp)
+          .get();
+
+      for (var doc in data2.docs) {
+        for (var participant in doc['participants']) parts.add(participant);
+      }
+
+      Set intermediate = Set();
+
+      var data3_1 = await db
+          .collection("Meetings")
+          .where("startTime", isLessThanOrEqualTo: startTimeStamp)
+          .get();
+
+      for (var doc in data3_1.docs) {
+        for (var participant in doc['participants'])
+          intermediate.add(participant);
+      }
+
+      var data3_2 = await db
+          .collection("Meetings")
+          .where("endTime", isGreaterThanOrEqualTo: endTimeStamp)
+          .get();
+
+      for (var doc in data3_2.docs) {
+        for (var participant in doc['participants']) {
+          if (intermediate
+              .where((element) => element['id'] == participant['id'])
+              .isNotEmpty) {
+            parts.add(participant);
+          }
+        }
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          //
+          builder: (context) => ValidateMeeting(
+              startTimeStamp: startTimeStamp,
+              endTimeStamp: endTimeStamp,
+              invalidParts: parts,
+              selectedParts: selected,
+              title: widget.title),
+        ),
+      ).then((value) => {
+            setState(() {
+              finalPart.clear();
+              parts.clear();
+            }),
+          });
+    }
+
     return Scaffold(
       backgroundColor: kPrimaryColor,
       floatingActionButton: FloatingActionButton.extended(
@@ -106,14 +119,14 @@ class SelectPart extends StatelessWidget {
             for (int i = 0; i < _selected.length; i++) {
               if (_selected[i]) finalPart.add(allAds[i]);
             }
+            print(finalPart);
+            if (finalPart.length < 2) {
+              showSnackBar(context, 'Select atleast 2 participants');
+            } else
+              getDataFromMyApi(context, widget.startTimeStamp,
+                  widget.endTimeStamp, finalPart);
 
-            void emptyFinalPart() {
-              finalPart.clear();
-            }
-
-            getDataFromMyApi(context, startTimeStamp, endTimeStamp, finalPart,
-                emptyFinalPart);
-
+            // allAds.clear();
             // print(finalPart);
             // Navigator.pushNamed(context, '/addMeeting');
           }),
@@ -247,7 +260,7 @@ class _UserListState extends State<UserList> {
               // tileColor: selected[i]
               //     ? Colors.blue
               //     : null, // If current item is selected show blue color
-              title: Text('${data["name"]} \n ${data["email"]}'),
+              title: Text('${data["name"]} \n${data["email"]}'),
               subtitle: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.end,

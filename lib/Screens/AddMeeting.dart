@@ -13,7 +13,11 @@ import 'package:interview_scheduler/constants.dart';
 
 extension TimeOfDayExtension on TimeOfDay {
   TimeOfDay addMinutes(int minute) {
-    return this.replacing(hour: this.hour, minute: this.minute + minute);
+    if (this.minute > 50) {
+      return this.replacing(
+          hour: this.hour + 1, minute: ((this.minute) + minute) % 60);
+    } else
+      return this.replacing(hour: this.hour, minute: this.minute + minute);
   }
 }
 
@@ -61,7 +65,7 @@ class _AddMeetingState extends State<AddMeeting> {
     }
   }
 
-  final DateFormat _dateFormat = DateFormat('y-MM-d');
+  final DateFormat _dateFormat = DateFormat('y-MM-dd');
   @override
   Widget build(BuildContext context) {
     // print('coming here');
