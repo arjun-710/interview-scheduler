@@ -1,9 +1,47 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:interview_scheduler/Screens/Layout.dart';
+import 'package:interview_scheduler/Screens/ValidateMeeting.dart';
+import 'package:interview_scheduler/constants.dart';
 
 class SelectPart extends StatelessWidget {
-  const SelectPart({Key? key}) : super(key: key);
+  final DateTime startTimeStamp;
+  final DateTime endTimeStamp;
+
+  const SelectPart(
+      {Key? key, required this.startTimeStamp, required this.endTimeStamp})
+      : super(key: key);
+
+  void getDataFromMyApi(BuildContext context, DateTime startTimeStamp,
+      DateTime endTimeStamp, List selected) async {
+    FirebaseFirestore db = FirebaseFirestore.instance;
+
+    List<Map<String, dynamic>> meetings = [];
+    List parts = [];
+    var data = await db
+        .collection("Meetings")
+        .where("startTime", isGreaterThanOrEqualTo: startTimeStamp)
+        .where("startTime", isLessThanOrEqualTo: endTimeStamp)
+        .get();
+
+    for (var doc in data.docs) {
+      for (var participant in doc['participants']) parts.add(participant);
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        //
+        builder: (context) => ValidateMeeting(
+            startTimeStamp: startTimeStamp,
+            endTimeStamp: endTimeStamp,
+            invalidParts: parts,
+            selectedParts: selected),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,127 +50,119 @@ class SelectPart extends StatelessWidget {
 
     List allAds = [];
     List<bool> _selected = [];
-    return SafeArea(
-      child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 30),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 30),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text("Interview Participants",
-                          style: TextStyle(
-                              fontSize: 28, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
+    List finalPart = [];
+    Size size = MediaQuery.of(context).size;
+    return Scaffold(
+      backgroundColor: kPrimaryColor,
+      floatingActionButton: FloatingActionButton.extended(
+          elevation: 0.0,
+          label: const Text('Create meeting'),
+          icon: const Icon(Icons.add),
+          backgroundColor: kPrimaryColor,
+          onPressed: () {
+            // print(startTimeStamp.toIso8601String());
+            // print(endTimeStamp.toIso8601String());
+
+            for (int i = 0; i < _selected.length; i++) {
+              if (_selected[i]) finalPart.add(allAds[i]);
+            }
+
+            getDataFromMyApi(context, startTimeStamp, endTimeStamp, finalPart);
+            // print(finalPart);
+            // Navigator.pushNamed(context, '/addMeeting');
+          }),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(
+                height: size.height,
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(kMarginTopBottom),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: SvgPicture.asset(
+                              kleftSvg,
+                            ),
+                          ),
+                          const SizedBox(height: 13),
+                          const Text(
+                            'Add Participants',
+                            style: TextStyle(
+                                color: kTextColor,
+                                fontSize: 25,
+                                fontFamily: 'segoe-UI'),
+                          )
+                        ],
+                      ),
+                    ),
+                    Container(
+                      margin: EdgeInsets.only(top: size.height * 0.175),
+                      padding: EdgeInsets.only(bottom: 30),
+                      decoration: const BoxDecoration(
+                        color: kSecondaryColor,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(25),
+                          topRight: Radius.circular(25),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(30.0),
+                        child: StreamBuilder<QuerySnapshot>(
+                          stream: _partStream,
+                          builder: (BuildContext context,
+                              AsyncSnapshot<QuerySnapshot> snapshot) {
+                            if (snapshot.hasError) {
+                              return const Text('Something went wrong');
+                            }
+
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                            // Fill it with false initiall
+
+                            snapshot.data!.docs.forEach((d) {
+                              allAds.add({
+                                'name': d['name'],
+                                'id': d['id'],
+                                'age': d['age']
+                              });
+                              _selected.add(false);
+                              // ClassificadoData(d.documentID, d.data["title"],
+                              //     d.data["description"], d.data["price"], d.data["images"])
+                            });
+                            var len = allAds.length;
+
+                            // print(allData);
+                            // print(allAds);
+
+                            return UserList(
+                              allData: allAds,
+                              len: len,
+                              selected: _selected,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 40),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height / 1.75,
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: _partStream,
-                    builder: (BuildContext context,
-                        AsyncSnapshot<QuerySnapshot> snapshot) {
-                      if (snapshot.hasError) {
-                        return Text('Something went wrong');
-                      }
-
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                      // Fill it with false initiall
-
-                      snapshot.data!.docs.forEach((d) {
-                        allAds.add({
-                          'name': d['name'],
-                          'id': d['id'],
-                          'age': d['age']
-                        });
-                        _selected.add(false);
-                        // ClassificadoData(d.documentID, d.data["title"],
-                        //     d.data["description"], d.data["price"], d.data["images"])
-                      });
-                      var len = allAds.length;
-
-                      // print(allData);
-                      // print(allAds);
-
-                      return UserList(
-                        allData: allAds,
-                        len: len,
-                        selected: _selected,
-                      );
-                    },
-                  ),
-                ),
-                GestureDetector(
-                  child: Container(
-                    child: Text('Submit'),
-                  ),
-                  onTap: () {
-                    print("after submission");
-                    print(_selected);
-                  },
-                )
-              ],
-            ),
+              )
+            ],
           ),
         ),
       ),
     );
-  }
-}
-
-class ListPart extends StatefulWidget {
-  const ListPart({Key? key}) : super(key: key);
-
-  @override
-  State<ListPart> createState() => _ListPartState();
-}
-
-class _ListPartState extends State<ListPart> {
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-    // return StreamBuilder<QuerySnapshot>(
-    //   stream: _partStream,
-    //   builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-    //     if (snapshot.hasError) {
-    //       return Text('Something went wrong');
-    //     }
-
-    //     if (snapshot.connectionState == ConnectionState.waiting) {
-    //       return Center(child: CircularProgressIndicator());
-    //     }
-    //     // Fill it with false initially
-
-    //     final allData = snapshot.data!.docs.map((doc) => doc.data()).toList();
-
-    //     List allAds = [];
-
-    //     snapshot.data!.docs.forEach((d) {
-    //       allAds.add({'name': d['name'], 'id': d['id'], 'age': d['age']});
-    //       // ClassificadoData(d.documentID, d.data["title"],
-    //       //     d.data["description"], d.data["price"], d.data["images"])
-    //     });
-    //     var len = allAds.length;
-
-    //     final List<bool> _selected = List.generate(len, (i) => false);
-    //     // print(allData);
-    //     // print(allAds);
-
-    //     return UserList(
-    //       allData: allData,
-    //       len: len,
-    //       selected: _selected,
-    //     );
-    //   },
-    // );
   }
 }
 
@@ -167,13 +197,29 @@ class _UserListState extends State<UserList> {
           return ListTile(
 
               // selectedTileColor: Colors.blue,
-              tileColor: selected[i]
-                  ? Colors.blue
-                  : null, // If current item is selected show blue color
+              // tileColor: selected[i]
+              //     ? Colors.blue
+              //     : null, // If current item is selected show blue color
               title: Text('${data["name"]}'),
+              subtitle: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (selected[i] == true) ...[
+                    RichText(
+                      text: const TextSpan(
+                          text: 'Selected',
+                          style: TextStyle(color: Colors.blue)),
+                    ),
+                  ] else ...[
+                    const Text(''),
+                  ],
+                  const Divider(),
+                ],
+              ),
               onTap: () => {
                     setState(() => selected[i] = !selected[i]),
-                    print(selected),
+                    // print(selected),
                   } // Reverse bool value
               );
         });
