@@ -17,7 +17,6 @@
 
 <div  align="center">
 
-<a  href="https://burgurly.azurewebsites.net/"><img  src="https://i.ibb.co/bmYH0VG/Screenshot-2022-04-14-094528.png"  alt="2021-07-20-10-30-15"  border="0"></a>
 
 </div>
 
