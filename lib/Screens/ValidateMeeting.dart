@@ -9,7 +9,7 @@ import 'package:interview_scheduler/Screens/Layout.dart';
 import 'package:interview_scheduler/constants.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 
-class ValidateMeeting extends StatelessWidget {
+class ValidateMeeting extends StatefulWidget {
   final DateTime startTimeStamp;
   final DateTime endTimeStamp;
   final Set invalidParts;
@@ -25,6 +25,20 @@ class ValidateMeeting extends StatelessWidget {
       : super(key: key);
 
   @override
+  State<ValidateMeeting> createState() => _ValidateMeetingState(
+      startTimeStamp, endTimeStamp, invalidParts, selectedParts, title);
+}
+
+class _ValidateMeetingState extends State<ValidateMeeting> {
+  final DateTime startTimeStamp;
+  final DateTime endTimeStamp;
+  final Set invalidParts;
+  final List selectedParts;
+  final String title;
+
+  _ValidateMeetingState(this.startTimeStamp, this.endTimeStamp,
+      this.invalidParts, this.selectedParts, this.title);
+  @override
   Widget build(BuildContext context) {
     List common = [];
     List mailingList = [];
@@ -32,9 +46,10 @@ class ValidateMeeting extends StatelessWidget {
     void sendMessage() async {
       final Email email = Email(
         body:
-            'hello meeting fixed from ${startTimeStamp.toIso8601String()} to ${endTimeStamp.toIso8601String()} ',
-        subject: 'A meeting for $title',
-        recipients: selectedParts.map((e) => e['email'].toString()).toList(),
+            'hello meeting fixed from ${widget.startTimeStamp.toIso8601String()} to ${widget.endTimeStamp.toIso8601String()} ',
+        subject: 'A meeting for ${widget.title}',
+        recipients:
+            widget.selectedParts.map((e) => e['email'].toString()).toList(),
         isHTML: false,
       );
       try {
@@ -46,11 +61,11 @@ class ValidateMeeting extends StatelessWidget {
       showSnackBar(context, "Mails send");
     }
 
-    for (int i = 0; i < selectedParts.length; i++) {
-      if (invalidParts
-          .where((element) => element['id'] == selectedParts[i]['id'])
+    for (int i = 0; i < widget.selectedParts.length; i++) {
+      if (widget.invalidParts
+          .where((element) => element['id'] == widget.selectedParts[i]['id'])
           .isNotEmpty) {
-        common.add(selectedParts[i]);
+        common.add(widget.selectedParts[i]);
       }
     }
 
@@ -64,10 +79,10 @@ class ValidateMeeting extends StatelessWidget {
             FirebaseFirestore.instance.collection('Meetings').doc();
         var meeting = {
           'id': docMeeting.id,
-          'startTime': startTimeStamp,
-          'endTime': endTimeStamp,
-          'participants': selectedParts,
-          'title': title,
+          'startTime': widget.startTimeStamp,
+          'endTime': widget.endTimeStamp,
+          'participants': widget.selectedParts,
+          'title': widget.title,
         };
 
         docMeeting.set(meeting);
@@ -75,14 +90,14 @@ class ValidateMeeting extends StatelessWidget {
         // Navigator.pop(context);
 
         sendMessage();
-        Navigator.pushNamed(context, '/landing');
+        // Navigator.pushNamed(context, '/landing');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+              '/landing', (Route<dynamic> route) => false);
+        });
         // showSnackBar(context, "Meeting created");
 
-        // Navigator.pushNamedAndRemoveUntil(
-        //     context, "/landing", (Route<dynamic> route) => false);
         // Navigator.popUntil(context, (route) => false);
-        // Navigator.of(context).pushNamedAndRemoveUntil(
-        //     '/landing', (Route<dynamic> route) => false);
 
       } catch (e) {
         log(e.toString());
@@ -97,7 +112,9 @@ class ValidateMeeting extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const CustomText(text: "Unavailable Participants"),
+                const CustomText(
+                    text:
+                        "Meeting could not be scheduled due to the following unavailable participants"),
                 const SizedBox(height: 40),
                 ListParticipants(
                   size: MediaQuery.of(context).size,

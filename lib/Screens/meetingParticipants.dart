@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:interview_scheduler/Components/ListParticipants.dart';
+import 'package:interview_scheduler/Screens/EditParticipants.dart';
 import 'package:interview_scheduler/Screens/Layout.dart';
 import 'package:interview_scheduler/constants.dart';
 import 'package:intl/intl.dart';
@@ -33,6 +34,35 @@ class ViewDetails extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
           backgroundColor: kPrimaryColor,
+          floatingActionButton: FloatingActionButton.extended(
+            elevation: 0.0,
+            label: const Text('Edit meeting'),
+            icon: const Icon(Icons.add),
+            backgroundColor: kPrimaryColor,
+            onPressed: () async {
+              var query = await FirebaseFirestore.instance
+                  .collection('Meetings')
+                  .doc(id)
+                  .get();
+
+              // setState(() {
+              List data = query.data()!['participants'];
+              Set already = new Set();
+              for (int i = 0; i < data.length; i++) already.add(data[i]['id']);
+              // log(already.toString());
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditPart(
+                      startTimeStamp: startDate,
+                      endTimeStamp: endDate,
+                      title: title,
+                      id: id,
+                      already: already),
+                ),
+              );
+            },
+          ),
           body: Layout(
             pageText: title,
             child: Column(
@@ -86,6 +116,11 @@ class GetParticipants extends StatelessWidget {
     Size size = MediaQuery.of(context).size;
     CollectionReference meetings =
         FirebaseFirestore.instance.collection('Meetings');
+
+    List allAds = [];
+    List<bool> _selected = [];
+    List finalPart = [];
+
     return FutureBuilder<DocumentSnapshot>(
       future: meetings.doc(id).get(),
       builder:

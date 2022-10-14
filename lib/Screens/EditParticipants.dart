@@ -1,3 +1,8 @@
+import 'dart:developer';
+
+import 'package:flutter/src/foundation/key.dart';
+import 'package:flutter/src/widgets/framework.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,26 +13,36 @@ import 'package:interview_scheduler/Screens/Layout.dart';
 import 'package:interview_scheduler/Screens/ValidateMeeting.dart';
 import 'package:interview_scheduler/constants.dart';
 
-class SelectPart extends StatefulWidget {
+class EditPart extends StatefulWidget {
   final DateTime startTimeStamp;
   final DateTime endTimeStamp;
   final String title;
-  const SelectPart(
+  final String id;
+  final Set already;
+  const EditPart(
       {Key? key,
       required this.startTimeStamp,
       required this.endTimeStamp,
-      required this.title})
+      required this.title,
+      required this.id,
+      required this.already})
       : super(key: key);
 
   @override
-  State<SelectPart> createState() => _SelectPartState();
+  State<EditPart> createState() => _EditPartState(id, already);
 }
 
-class _SelectPartState extends State<SelectPart> {
+class _EditPartState extends State<EditPart> {
+  final String id;
+  final Set already;
+  _EditPartState(this.id, this.already);
+
   @override
   Widget build(BuildContext context) {
     final Stream<QuerySnapshot> _partStream =
         FirebaseFirestore.instance.collection('Users').snapshots();
+
+    // log(already.toString());
 
     List allAds = [];
     List<bool> _selected = [];
@@ -157,7 +172,11 @@ class _SelectPartState extends State<SelectPart> {
                     'age': d['age'],
                     'email': d['email'],
                   });
-                  _selected.add(false);
+
+                  if (already.contains(d['id']))
+                    _selected.add(true);
+                  else
+                    _selected.add(false);
                   // ClassificadoData(d.documentID, d.data["title"],
                   //     d.data["description"], d.data["price"], d.data["images"])
                 });
