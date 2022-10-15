@@ -8,13 +8,10 @@ import 'package:interview_scheduler/constants.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: FirebaseOptions(
-        apiKey: '',
-        appId: '1:628805477304:android:2b143acad453fc1132254d',
-        messagingSenderId: '',
-        projectId: 'interview-scheduler-710'),
-  );
+  await Firebase.initializeApp();
+
+  // FirebaseOptions required in order to run web app
+  // request for credentials
 
   runApp(const MyApp());
 }
