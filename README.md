@@ -1,4 +1,3 @@
-
 # Interview Scheduler
 
 ## Technologies
@@ -16,6 +15,8 @@
 <a href="https://ibb.co/VmZ4F33"><img src="https://i.ibb.co/gVpK066/select-time.jpg" alt="select-time" border="0"></a>
 <a href="https://ibb.co/wQBFMBw"><img src="https://i.ibb.co/6tr7gr1/validation.jpg" alt="validation" border="0"></a>
 <a href="https://ibb.co/8Bc6tNG"><img src="https://i.ibb.co/N3SZbtf/your-meetings.jpg" alt="your-meetings" border="0"></a>
+<a href="https://ibb.co/zPmwQws"><img src="https://i.ibb.co/RQgWYW2/photo-6222137362897548311-y.jpg" alt="photo-6222137362897548311-y" border="0"></a>
+<a href="https://ibb.co/4Z62fTB"><img src="https://i.ibb.co/Y7zXWkv/photo-6222137362897548312-y.jpg" alt="photo-6222137362897548312-y" border="0"></a>
 
 </div>
 
@@ -25,15 +26,19 @@
 
 - [Installation](#installation)
 
+- [Links](#links)
+
 - [EndPoints](#EndPoints)
 
 - [Features](#Features)
 
 ## About
 
-- An App to schedule interviews.
+- A mobile App and a Web App to schedule interviews.
+- CRUD operations on a meeting and participants.
+- Deployed WebApp.
 - Send emails upon invitation.
-- Database used is Firesbase Firestore.
+- Database used is Firestore.
 
 ## Installation
 
@@ -56,6 +61,11 @@ $ flutter packages get
 $ flutter run
 ```
 
+## Links
+
+- [WebApp](https://interview-scheduler-710.web.app/)
+- [App](https://drive.google.com/drive/folders/1-Wo2_0PXO2VM7r1j0_wgbVTORuwN0hex?usp=sharing)
+
 ## EndPoints
 
 | Endpoint | Info |
@@ -74,11 +84,21 @@ $ flutter run
 
 | /validateMeeting | `A page to validate and filter out unavailable participants` |
 
+| /editMeeting| `A page to edit Meeting by selecting date, time and title` |
+
+| /editParticipants| `A page to edit the initial participants of that meeting` |
+
+| /deleteMeeting| `A page to delete that meeting` |
+
 ## Features
 
 - Add users which can then be assigned interviews.
 
 - Schedule meeting/interviews without clashing.
+
+- Edit date, time, participants and title of a meeting.
+
+- Delete a meeting.
 
 - Know the unavailable participants.
 
