@@ -23,7 +23,7 @@ class MeetingCard extends StatelessWidget {
     return GestureDetector(
         child: Container(
           margin: const EdgeInsets.all(10),
-          height: 80,
+          height: 100,
           width: size.width,
           decoration: BoxDecoration(
             color: kPrimaryColor,
@@ -45,12 +45,12 @@ class MeetingCard extends StatelessWidget {
                 ),
                 RichText(
                   text: TextSpan(
-                      text: '$startTime - $endTime',
+                      text: 'From $startTime to $endTime',
                       style: const TextStyle(fontSize: 16)),
                 ),
                 RichText(
-                  text:
-                      TextSpan(text: '$startformattedDate - $endformattedDate'),
+                  text: TextSpan(
+                      text: 'on $startformattedDate - $endformattedDate'),
                 ),
               ],
             ),

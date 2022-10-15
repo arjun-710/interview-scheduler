@@ -10,7 +10,7 @@ import 'package:interview_scheduler/Screens/Layout.dart';
 import 'package:interview_scheduler/constants.dart';
 import 'package:intl/intl.dart';
 
-class ViewDetails extends StatelessWidget {
+class ViewDetails extends StatefulWidget {
   final String currentMeetingId;
   final String title;
   final String startTime;
@@ -28,10 +28,46 @@ class ViewDetails extends StatelessWidget {
       : super(key: key);
 
   @override
+  State<ViewDetails> createState() => _ViewDetailsState();
+}
+
+class _ViewDetailsState extends State<ViewDetails> {
+  bool confirmDelete = false;
+
+  Future openDialog() => showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, setState) {
+            return AlertDialog(
+              title: Text('Confirmation'),
+              content: Text('Are you sure you want to delete meeting'),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      this.setState(() {
+                        this.confirmDelete = true;
+                        Navigator.pop(context);
+                      });
+                    },
+                    child: Text('Confirm')),
+                TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Cancel'))
+              ],
+            );
+          },
+        );
+      });
+
+  @override
   Widget build(BuildContext context) {
     final DateFormat _dateFormat = DateFormat('EEEE, MMMM d');
-    String formatStartDate = _dateFormat.format(startDate);
-    String formatEndDate = _dateFormat.format(endDate);
+    String formatStartDate = _dateFormat.format(widget.startDate);
+    String formatEndDate = _dateFormat.format(widget.endDate);
+
     return SafeArea(
       child: Scaffold(
           backgroundColor: kPrimaryColor,
@@ -43,22 +79,24 @@ class ViewDetails extends StatelessWidget {
             onPressed: () async {
               var query = await FirebaseFirestore.instance
                   .collection('Meetings')
-                  .doc(currentMeetingId)
+                  .doc(widget.currentMeetingId)
                   .get();
 
               // setState(() {
               List data = query.data()!['participants'];
-              Set already = new Set();
-              for (int i = 0; i < data.length; i++) already.add(data[i]['id']);
+              Set already = Set();
+              for (int i = 0; i < data.length; i++) {
+                already.add(data[i]['id']);
+              }
               // log(already.toString());
               Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: ((context) => AddMeeting(
-                            currentMeetingId: currentMeetingId,
-                            startTimeStamp: startDate,
-                            endTimeStamp: endDate,
-                            title: title,
+                            currentMeetingId: widget.currentMeetingId,
+                            startTimeStamp: widget.startDate,
+                            endTimeStamp: widget.endDate,
+                            title: widget.title,
                             already: already,
                           )))
                   // MaterialPageRoute(
@@ -73,7 +111,7 @@ class ViewDetails extends StatelessWidget {
             },
           ),
           body: Layout(
-            pageText: title,
+            pageText: widget.title,
             child: Column(
               children: [
                 Row(
@@ -87,10 +125,10 @@ class ViewDetails extends StatelessWidget {
                           style: const TextStyle(
                               fontSize: 16, color: kFadeTextColor),
                         ),
-                        // const Text(
-                        //   'to',
-                        //   style: TextStyle(fontSize: 16, color: kFadeTextColor),
-                        // ),
+                        const Text(
+                          'to',
+                          style: TextStyle(fontSize: 16, color: kFadeTextColor),
+                        ),
                         Text(
                           formatEndDate,
                           style: const TextStyle(
@@ -98,16 +136,33 @@ class ViewDetails extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          '$startTime - $endTime',
+                          'From ${widget.startTime} to ${widget.endTime}',
                           style: const TextStyle(fontSize: 16),
                         )
                       ],
+                    ),
+                    const SizedBox(width: 27),
+                    GestureDetector(
+                      child: const Icon(Icons.delete),
+                      onTap: () async {
+                        await openDialog();
+                        log(confirmDelete.toString());
+                        if (confirmDelete == true) {
+                          var db = FirebaseFirestore.instance;
+                          db
+                              .collection('Meetings')
+                              .doc(widget.currentMeetingId)
+                              .delete();
+
+                          Navigator.pop(context);
+                        }
+                      },
                     )
                   ],
                 ),
                 const SizedBox(height: 40),
                 GetParticipants(
-                  id: currentMeetingId,
+                  id: widget.currentMeetingId,
                 ),
               ],
             ),
@@ -162,8 +217,6 @@ class GetParticipants extends StatelessWidget {
   }
 }
 
-
-
 // class GetParticipants extends StatefulWidget {
 //   final String id;
 //   const GetParticipants({Key? key, required this.id}) : super(key: key);
@@ -179,6 +232,7 @@ class GetParticipants extends StatelessWidget {
 //   Widget build(BuildContext context) {
 //     CollectionReference meetings =
 //         FirebaseFirestore.instance.collection('Meetings');
-//     return 
+//     return
 //   }
 // }
+

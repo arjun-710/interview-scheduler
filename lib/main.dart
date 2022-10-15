@@ -8,14 +8,7 @@ import 'package:interview_scheduler/constants.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: FirebaseOptions(
-      appId: '',
-      projectId: '',
-      messagingSenderId: '',
-      apiKey: '',
-    ),
-  );
+  await Firebase.initializeApp();
 
   runApp(const MyApp());
 }

@@ -19,7 +19,7 @@ class DateComponent extends StatelessWidget {
       children: <Widget>[
         // Text(_selectedValue.toString()),
         DatePicker(
-          DateTime.now(),
+          timestamp ?? DateTime.now(),
           width: 60,
           height: 80,
           controller: controller,

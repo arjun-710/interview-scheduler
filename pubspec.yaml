@@ -38,6 +38,7 @@ dependencies:
   flutter_svg: ^1.1.5
   date_picker_timeline: ^1.2.3
   flutter_email_sender: ^5.1.0
+  firebase_core: ^1.24.0
 
 dev_dependencies:
   flutter_test:
