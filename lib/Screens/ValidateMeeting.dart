@@ -100,7 +100,7 @@ class _ValidateMeetingState extends State<ValidateMeeting> {
 
         // Navigator.pop(context);
 
-        // sendMessage();
+        sendMessage();
         // Navigator.pushNamed(context, '/landing');
 
         Future.delayed(const Duration(milliseconds: 500), () {
