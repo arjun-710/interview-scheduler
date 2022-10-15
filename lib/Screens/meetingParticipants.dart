@@ -115,6 +115,8 @@ class _ViewDetailsState extends State<ViewDetails> {
             child: Column(
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SvgPicture.asset(kCalendarSvg),
                     const SizedBox(width: 27),
@@ -143,7 +145,11 @@ class _ViewDetailsState extends State<ViewDetails> {
                     ),
                     const SizedBox(width: 27),
                     GestureDetector(
-                      child: const Icon(Icons.delete),
+                      child: SvgPicture.asset(
+                        kdeleteSvg,
+                        width: 40,
+                        height: 40,
+                      ),
                       onTap: () async {
                         await openDialog();
                         log(confirmDelete.toString());

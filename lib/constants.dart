@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 const kleftSvg = "assets/arrow-left.svg";
 const kCalendarSvg = "assets/calendar.svg";
+const kdeleteSvg = "assets/delete.svg";
+
 const kMarginLeftRight = 40.0;
 const kMarginTopBottom = 27.0;
 const kPrimaryColor = Color(0xFFEF928F);
