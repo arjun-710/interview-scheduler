@@ -5,12 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:interview_scheduler/Components/ListParticipants.dart';
 import 'package:interview_scheduler/Components/SelectPart.dart';
+import 'package:interview_scheduler/Screens/AddMeeting.dart';
 import 'package:interview_scheduler/Screens/Layout.dart';
 import 'package:interview_scheduler/constants.dart';
 import 'package:intl/intl.dart';
 
 class ViewDetails extends StatelessWidget {
-  final String id;
+  final String currentMeetingId;
   final String title;
   final String startTime;
   final String endTime;
@@ -18,7 +19,7 @@ class ViewDetails extends StatelessWidget {
   final DateTime endDate;
   const ViewDetails(
       {Key? key,
-      required this.id,
+      required this.currentMeetingId,
       required this.title,
       required this.startTime,
       required this.endTime,
@@ -30,7 +31,7 @@ class ViewDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final DateFormat _dateFormat = DateFormat('EEEE, MMMM d');
     String formatStartDate = _dateFormat.format(startDate);
-    String formatEndDate = _dateFormat.format(startDate);
+    String formatEndDate = _dateFormat.format(endDate);
     return SafeArea(
       child: Scaffold(
           backgroundColor: kPrimaryColor,
@@ -42,7 +43,7 @@ class ViewDetails extends StatelessWidget {
             onPressed: () async {
               var query = await FirebaseFirestore.instance
                   .collection('Meetings')
-                  .doc(id)
+                  .doc(currentMeetingId)
                   .get();
 
               // setState(() {
@@ -51,16 +52,24 @@ class ViewDetails extends StatelessWidget {
               for (int i = 0; i < data.length; i++) already.add(data[i]['id']);
               // log(already.toString());
               Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SelectPart(
-                      startTimeStamp: startDate,
-                      endTimeStamp: endDate,
-                      title: title,
-                      currentMeetingId: id,
-                      already: already),
-                ),
-              );
+                  context,
+                  MaterialPageRoute(
+                      builder: ((context) => AddMeeting(
+                            currentMeetingId: currentMeetingId,
+                            startTimeStamp: startDate,
+                            endTimeStamp: endDate,
+                            title: title,
+                            already: already,
+                          )))
+                  // MaterialPageRoute(
+                  //   builder: (context) => SelectPart(
+                  //       startTimeStamp: startDate,
+                  //       endTimeStamp: endDate,
+                  //       title: title,
+                  //       currentMeetingId: id,
+                  //       already: already),
+                  // ),
+                  );
             },
           ),
           body: Layout(
@@ -98,7 +107,7 @@ class ViewDetails extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
                 GetParticipants(
-                  id: id,
+                  id: currentMeetingId,
                 ),
               ],
             ),

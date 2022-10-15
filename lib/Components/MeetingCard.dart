@@ -61,7 +61,7 @@ class MeetingCard extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => ViewDetails(
-                id: meeting.id,
+                currentMeetingId: meeting.id,
                 title: meeting.title,
                 startTime: startTime,
                 endTime: endTime,

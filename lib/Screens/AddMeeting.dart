@@ -22,20 +22,64 @@ extension TimeOfDayExtension on TimeOfDay {
 }
 
 class AddMeeting extends StatefulWidget {
-  const AddMeeting({Key? key}) : super(key: key);
+  final String? currentMeetingId;
+  final DateTime? startTimeStamp;
+  final DateTime? endTimeStamp;
+  final String? title;
+  final Set? already;
+  const AddMeeting(
+      {Key? key,
+      this.currentMeetingId,
+      this.startTimeStamp,
+      this.endTimeStamp,
+      this.title,
+      this.already})
+      : super(key: key);
 
   @override
-  State<AddMeeting> createState() => _AddMeetingState();
+  State<AddMeeting> createState() => _AddMeetingState(
+      currentMeetingId, startTimeStamp, endTimeStamp, title, already);
 }
 
 class _AddMeetingState extends State<AddMeeting> {
+  final String? currentMeetingId;
+  final DateTime? startTimeStamp;
+  final DateTime? endTimeStamp;
+  final String? title;
+  final Set? already;
+
+  _AddMeetingState(this.currentMeetingId, this.startTimeStamp,
+      this.endTimeStamp, this.title, this.already);
+
   final DatePickerController _startDateController = DatePickerController();
-  final TextEditingController controller = TextEditingController();
+
+  final TextEditingController titleController = TextEditingController();
+
   DateTime selectedStartDate = DateTime.now();
+
   final DatePickerController _endDateController = DatePickerController();
+
   DateTime selectedEndDate = DateTime.now();
+
   TimeOfDay _startime = TimeOfDay.now();
+
   TimeOfDay _endTime = TimeOfDay.now().addMinutes(10);
+
+  @override
+  void initState() {
+    super.initState();
+    titleController.text = title ?? "";
+    // log(TimeOfDay.fromDateTime(DateTime.parse(startTimeStamp.toString()))
+    //     .toString());
+
+    selectedStartDate = startTimeStamp ?? DateTime.now();
+    selectedEndDate = endTimeStamp ?? DateTime.now();
+    _startime = TimeOfDay.fromDateTime(
+        DateTime.parse((startTimeStamp ?? DateTime.now()).toString()));
+    _endTime = TimeOfDay.fromDateTime(
+            DateTime.parse((endTimeStamp ?? DateTime.now()).toString()))
+        .addMinutes(10);
+  }
 
   void _selectstartTime(text) async {
     final TimeOfDay? startTime = await showTimePicker(
@@ -54,7 +98,7 @@ class _AddMeetingState extends State<AddMeeting> {
   void _selectendTime(text) async {
     final TimeOfDay? endTime = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.now(),
+        initialTime: _endTime,
         initialEntryMode: TimePickerEntryMode.input,
         helpText: text);
 
@@ -88,17 +132,22 @@ class _AddMeetingState extends State<AddMeeting> {
               if (startTimeStamp.difference(endTimeStamp).inMinutes > 0) {
                 showSnackBar(
                     context, 'start time must be smaller than end time');
-              } else if (controller.text.isEmpty) {
+              } else if (titleController.text.isEmpty) {
                 showSnackBar(context, 'Enter a Title');
               } else {
+                log("time stamps from add Meeting part : " +
+                    startTimeStamp.toIso8601String() +
+                    " " +
+                    endTimeStamp.toIso8601String());
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => SelectPart(
+                        currentMeetingId: currentMeetingId ?? "",
                         startTimeStamp: startTimeStamp,
                         endTimeStamp: endTimeStamp,
-                        title: controller.text,
-                        already: {}),
+                        title: titleController.text,
+                        already: already ?? {}),
                   ),
                 );
               }
@@ -117,6 +166,7 @@ class _AddMeetingState extends State<AddMeeting> {
               const SizedBox(height: 40),
               DateComponent(
                 controller: _startDateController,
+                timestamp: startTimeStamp,
                 onDateChange: (date) {
                   setState(() {
                     selectedStartDate = date;
@@ -129,6 +179,7 @@ class _AddMeetingState extends State<AddMeeting> {
               const SizedBox(height: 15),
               DateComponent(
                 controller: _endDateController,
+                timestamp: endTimeStamp,
                 onDateChange: (date) {
                   setState(() {
                     selectedEndDate = date;
@@ -169,7 +220,7 @@ class _AddMeetingState extends State<AddMeeting> {
               ),
               const SizedBox(height: 27),
               CustomTextField(
-                controller: controller,
+                controller: titleController,
                 hintText: "Enter title",
                 // errorText: errorText
               )

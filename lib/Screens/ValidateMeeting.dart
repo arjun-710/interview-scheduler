@@ -18,8 +18,10 @@ class ValidateMeeting extends StatefulWidget {
   final Set invalidParts;
   final List selectedParts;
   final String title;
+  final String currentMeetingId;
   const ValidateMeeting(
       {Key? key,
+      required this.currentMeetingId,
       required this.startTimeStamp,
       required this.endTimeStamp,
       required this.invalidParts,
@@ -28,8 +30,8 @@ class ValidateMeeting extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<ValidateMeeting> createState() => _ValidateMeetingState(
-      startTimeStamp, endTimeStamp, invalidParts, selectedParts, title);
+  State<ValidateMeeting> createState() => _ValidateMeetingState(startTimeStamp,
+      endTimeStamp, invalidParts, selectedParts, title, currentMeetingId);
 }
 
 class _ValidateMeetingState extends State<ValidateMeeting> {
@@ -37,10 +39,11 @@ class _ValidateMeetingState extends State<ValidateMeeting> {
   final DateTime endTimeStamp;
   final Set invalidParts;
   final List selectedParts;
+  final String currentMeetingId;
   final String title;
 
   _ValidateMeetingState(this.startTimeStamp, this.endTimeStamp,
-      this.invalidParts, this.selectedParts, this.title);
+      this.invalidParts, this.selectedParts, this.title, this.currentMeetingId);
   @override
   Widget build(BuildContext context) {
     List common = [];
@@ -64,6 +67,7 @@ class _ValidateMeetingState extends State<ValidateMeeting> {
       showSnackBar(context, "Mails send");
     }
 
+    log("selectedParts: " + selectedParts.toString());
     for (int i = 0; i < widget.selectedParts.length; i++) {
       if (widget.invalidParts.contains(widget.selectedParts[i]['id'])) {
         common.add(widget.selectedParts[i]);
@@ -76,8 +80,14 @@ class _ValidateMeetingState extends State<ValidateMeeting> {
     // print(selectedParts);
     if (common.isEmpty) {
       try {
-        final docMeeting =
-            FirebaseFirestore.instance.collection('Meetings').doc();
+        final docMeeting;
+        if (currentMeetingId.isEmpty) {
+          docMeeting = FirebaseFirestore.instance.collection('Meetings').doc();
+        } else {
+          docMeeting = FirebaseFirestore.instance
+              .collection('Meetings')
+              .doc(currentMeetingId);
+        }
         var meeting = {
           'id': docMeeting.id,
           'startTime': widget.startTimeStamp,
@@ -92,11 +102,16 @@ class _ValidateMeetingState extends State<ValidateMeeting> {
 
         // sendMessage();
         // Navigator.pushNamed(context, '/landing');
+
         Future.delayed(const Duration(milliseconds: 500), () {
           Navigator.of(context).pushNamedAndRemoveUntil(
               '/landing', (Route<dynamic> route) => false);
         });
-        // showSnackBar(context, "Meeting created");
+
+        if (currentMeetingId.isEmpty)
+          showSnackBar(context, 'Meeting Created');
+        else
+          showSnackBar(context, 'Meeting Updated');
 
         // Navigator.popUntil(context, (route) => false);
 

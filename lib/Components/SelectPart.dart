@@ -14,25 +14,27 @@ class SelectPart extends StatefulWidget {
   final DateTime startTimeStamp;
   final DateTime endTimeStamp;
   final String title;
-  final String? currentMeetingId;
+  final String currentMeetingId;
   final Set already;
 
   const SelectPart(
       {Key? key,
       required this.already,
-      this.currentMeetingId,
+      required this.currentMeetingId,
       required this.startTimeStamp,
       required this.endTimeStamp,
       required this.title})
       : super(key: key);
 
   @override
-  State<SelectPart> createState() => _SelectPartState(already);
+  State<SelectPart> createState() =>
+      _SelectPartState(already, currentMeetingId);
 }
 
 class _SelectPartState extends State<SelectPart> {
   final Set already;
-  _SelectPartState(this.already);
+  final String currentMeetingId;
+  _SelectPartState(this.already, this.currentMeetingId);
 
   @override
   Widget build(BuildContext context) {
@@ -124,9 +126,18 @@ class _SelectPartState extends State<SelectPart> {
 
       parts = await getAll(new1);
 
-      already.forEach((element) {
-        parts.update(element, (value) => --value);
-      });
+      try {
+        // already.forEach((element) {
+        //   parts.update(element, (value) => --value);
+        // });
+        parts.forEach((key, value) {
+          if (already.contains(key)) {
+            parts.update(key, (value) => --value);
+          }
+        });
+      } catch (e) {
+        log("error while parsing parts list: " + e.toString());
+      }
 
       parts.removeWhere((key, value) => value == 0);
 
@@ -136,11 +147,16 @@ class _SelectPartState extends State<SelectPart> {
 
       Set finalInvalidParts = {...parts.keys.toList()};
 
+      log("time stamps from select part : " +
+          startTimeStamp.toIso8601String() +
+          " " +
+          endTimeStamp.toIso8601String());
       Navigator.push(
         context,
         MaterialPageRoute(
           //
           builder: (context) => ValidateMeeting(
+              currentMeetingId: currentMeetingId,
               startTimeStamp: startTimeStamp,
               endTimeStamp: endTimeStamp,
               invalidParts: finalInvalidParts,
@@ -149,8 +165,8 @@ class _SelectPartState extends State<SelectPart> {
         ),
       ).then((value) => {
             setState(() {
-              finalPart.clear();
-              parts.clear();
+              // finalPart.clear();
+              // parts.clear();
             }),
           });
     }

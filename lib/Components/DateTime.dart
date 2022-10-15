@@ -4,10 +4,13 @@ import 'package:date_picker_timeline/date_picker_timeline.dart';
 class DateComponent extends StatelessWidget {
   final DatePickerController controller;
   final void Function(DateTime) onDateChange;
-
-  const DateComponent(
-      {Key? key, required this.controller, required this.onDateChange})
-      : super(key: key);
+  final DateTime? timestamp;
+  const DateComponent({
+    Key? key,
+    this.timestamp,
+    required this.controller,
+    required this.onDateChange,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +23,7 @@ class DateComponent extends StatelessWidget {
           width: 60,
           height: 80,
           controller: controller,
-          initialSelectedDate: DateTime.now(),
+          initialSelectedDate: timestamp ?? DateTime.now(),
           selectionColor: Colors.black,
           selectedTextColor: Colors.white,
           inactiveDates: const [],
