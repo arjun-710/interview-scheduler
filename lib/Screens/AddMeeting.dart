@@ -11,15 +11,15 @@ import 'package:interview_scheduler/Components/DateTime.dart';
 import 'package:interview_scheduler/Screens/Layout.dart';
 import 'package:interview_scheduler/constants.dart';
 
-extension TimeOfDayExtension on TimeOfDay {
-  TimeOfDay addMinutes(int minute) {
-    if (this.minute > 50) {
-      return this.replacing(
-          hour: this.hour + 1, minute: ((this.minute) + minute) % 60);
-    } else
-      return this.replacing(hour: this.hour, minute: this.minute + minute);
-  }
-}
+// extension TimeOfDayExtension on TimeOfDay {
+//   TimeOfDay addMinutes(int minute) {
+//     if (this.minute > 50) {
+//       return this.replacing(
+//           hour: this.hour + 1, minute: ((this.minute) + minute) % 60);
+//     } else
+//       return this.replacing(hour: this.hour, minute: this.minute + minute);
+//   }
+// }
 
 class AddMeeting extends StatefulWidget {
   final String? currentMeetingId;
@@ -63,7 +63,8 @@ class _AddMeetingState extends State<AddMeeting> {
 
   TimeOfDay _startime = TimeOfDay.now();
 
-  TimeOfDay _endTime = TimeOfDay.now().addMinutes(10);
+  TimeOfDay _endTime = TimeOfDay.fromDateTime(DateTime.parse(
+      DateTime.now().add(const Duration(minutes: 10)).toString()));
 
   @override
   void initState() {
@@ -76,9 +77,9 @@ class _AddMeetingState extends State<AddMeeting> {
     selectedEndDate = endTimeStamp ?? DateTime.now();
     _startime = TimeOfDay.fromDateTime(
         DateTime.parse((startTimeStamp ?? DateTime.now()).toString()));
-    _endTime = TimeOfDay.fromDateTime(
-            DateTime.parse((endTimeStamp ?? DateTime.now()).toString()))
-        .addMinutes(10);
+    _endTime = TimeOfDay.fromDateTime(DateTime.parse(
+        (endTimeStamp ?? DateTime.now().add(const Duration(minutes: 10)))
+            .toString()));
   }
 
   void _selectstartTime(text) async {
