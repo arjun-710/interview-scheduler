@@ -97,7 +97,8 @@ class _AddMeetingState extends State<AddMeeting> {
                     builder: (context) => SelectPart(
                         startTimeStamp: startTimeStamp,
                         endTimeStamp: endTimeStamp,
-                        title: controller.text),
+                        title: controller.text,
+                        already: {}),
                   ),
                 );
               }

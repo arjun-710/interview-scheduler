@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,18 +14,26 @@ class SelectPart extends StatefulWidget {
   final DateTime startTimeStamp;
   final DateTime endTimeStamp;
   final String title;
+  final String? currentMeetingId;
+  final Set already;
+
   const SelectPart(
       {Key? key,
+      required this.already,
+      this.currentMeetingId,
       required this.startTimeStamp,
       required this.endTimeStamp,
       required this.title})
       : super(key: key);
 
   @override
-  State<SelectPart> createState() => _SelectPartState();
+  State<SelectPart> createState() => _SelectPartState(already);
 }
 
 class _SelectPartState extends State<SelectPart> {
+  final Set already;
+  _SelectPartState(this.already);
+
   @override
   Widget build(BuildContext context) {
     final Stream<QuerySnapshot> _partStream =
@@ -31,14 +41,38 @@ class _SelectPartState extends State<SelectPart> {
 
     List allAds = [];
     List<bool> _selected = [];
-    List finalPart = [];
+    Set finalPart = new Set();
     Size size = MediaQuery.of(context).size;
 
-    void getDataFromMyApi(BuildContext context, DateTime startTimeStamp,
-        DateTime endTimeStamp, List selected) async {
+    Future<Map<dynamic, int>> getAll(List new1) async {
       FirebaseFirestore db = FirebaseFirestore.instance;
+      Map<dynamic, int> new2 = new Map();
+      for (int i = 0; i < new1.length; i++) {
+        var query = await db.collection('Meetings').doc(new1[i]).get();
 
-      Set<dynamic> parts = Set();
+        List data = query.data()!['participants'];
+        // log("data: " + data.toString());
+
+        for (int i = 0; i < data.length; i++) {
+          // log("participant: " + data[i]['id']);
+          // new2.add(data[i]['id']);
+          new2.update(
+            data[i]['id'],
+            (value) => ++value,
+            ifAbsent: () => 1,
+          );
+        }
+      }
+      return new2;
+    }
+
+    void getDataFromMyApi(BuildContext context, DateTime startTimeStamp,
+        DateTime endTimeStamp, Set selected) async {
+      Map<dynamic, int> parts = Map();
+
+      Set intersecting = new Set();
+
+      FirebaseFirestore db = FirebaseFirestore.instance;
 
       var data1 = await db
           .collection("Meetings")
@@ -47,7 +81,7 @@ class _SelectPartState extends State<SelectPart> {
           .get();
 
       for (var doc in data1.docs) {
-        for (var participant in doc['participants']) parts.add(participant);
+        intersecting.add(doc['id']);
       }
 
       var data2 = await db
@@ -57,7 +91,7 @@ class _SelectPartState extends State<SelectPart> {
           .get();
 
       for (var doc in data2.docs) {
-        for (var participant in doc['participants']) parts.add(participant);
+        intersecting.add(doc['id']);
       }
 
       Set intermediate = Set();
@@ -68,8 +102,7 @@ class _SelectPartState extends State<SelectPart> {
           .get();
 
       for (var doc in data3_1.docs) {
-        for (var participant in doc['participants'])
-          intermediate.add(participant);
+        intermediate.add(doc['id']);
       }
 
       var data3_2 = await db
@@ -78,14 +111,30 @@ class _SelectPartState extends State<SelectPart> {
           .get();
 
       for (var doc in data3_2.docs) {
-        for (var participant in doc['participants']) {
+        {
           if (intermediate
-              .where((element) => element['id'] == participant['id'])
+              .where((element) => element == doc['id'])
               .isNotEmpty) {
-            parts.add(participant);
+            intersecting.add(doc['id']);
           }
         }
       }
+      // log("intersecting meeting: " + intersecting.toString());
+      List new1 = intersecting.toList();
+
+      parts = await getAll(new1);
+
+      already.forEach((element) {
+        parts.update(element, (value) => --value);
+      });
+
+      parts.removeWhere((key, value) => value == 0);
+
+      // log("invalid parts: " + parts.toString());
+
+      log("invalid parts " + parts.toString());
+
+      Set finalInvalidParts = {...parts.keys.toList()};
 
       Navigator.push(
         context,
@@ -94,8 +143,8 @@ class _SelectPartState extends State<SelectPart> {
           builder: (context) => ValidateMeeting(
               startTimeStamp: startTimeStamp,
               endTimeStamp: endTimeStamp,
-              invalidParts: parts,
-              selectedParts: selected,
+              invalidParts: finalInvalidParts,
+              selectedParts: selected.toList(),
               title: widget.title),
         ),
       ).then((value) => {
@@ -118,11 +167,16 @@ class _SelectPartState extends State<SelectPart> {
             // print(endTimeStamp.toIso8601String());
 
             for (int i = 0; i < _selected.length; i++) {
-              if (_selected[i]) finalPart.add(allAds[i]);
+              if (_selected[i])
+                finalPart.add(allAds[i]);
+              else if (finalPart.contains(allAds[i]))
+                finalPart.remove(allAds[i]);
             }
             print(finalPart);
             if (finalPart.length < 2) {
-              showSnackBar(context, 'Select atleast 2 participants');
+              {
+                showSnackBar(context, 'Select atleast 2 participants');
+              }
             } else
               getDataFromMyApi(context, widget.startTimeStamp,
                   widget.endTimeStamp, finalPart);
@@ -149,28 +203,33 @@ class _SelectPartState extends State<SelectPart> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 // Fill it with false initiall
-
-                snapshot.data!.docs.forEach((d) {
-                  allAds.add({
-                    'name': d['name'],
-                    'id': d['id'],
-                    'age': d['age'],
-                    'email': d['email'],
+                if (snapshot.hasData) {
+                  snapshot.data!.docs.forEach((d) {
+                    allAds.add({
+                      'name': d['name'],
+                      'id': d['id'],
+                      'age': d['age'],
+                      'email': d['email'],
+                    });
+                    if (already.contains(d['id']))
+                      _selected.add(true);
+                    else
+                      _selected.add(false);
+                    // ClassificadoData(d.documentID, d.data["title"],
+                    //     d.data["description"], d.data["price"], d.data["images"])
                   });
-                  _selected.add(false);
-                  // ClassificadoData(d.documentID, d.data["title"],
-                  //     d.data["description"], d.data["price"], d.data["images"])
-                });
-                var len = allAds.length;
+                  var len = allAds.length;
 
-                // print(allData);
-                // print(allAds);
+                  // print(allData);
+                  // print(allAds);
 
-                return UserList(
-                  allParts: allAds,
-                  len: len,
-                  selected: _selected,
-                );
+                  return UserList(
+                    allParts: allAds,
+                    len: len,
+                    selected: _selected,
+                  );
+                } else
+                  return CircularProgressIndicator();
               },
             ),
           ),

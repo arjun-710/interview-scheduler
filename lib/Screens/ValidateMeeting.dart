@@ -1,3 +1,5 @@
+// import 'dart:developer';
+
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,6 +10,7 @@ import 'package:interview_scheduler/Components/ShowSnackBar.dart';
 import 'package:interview_scheduler/Screens/Layout.dart';
 import 'package:interview_scheduler/constants.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
+import 'dart:ui';
 
 class ValidateMeeting extends StatefulWidget {
   final DateTime startTimeStamp;
@@ -62,9 +65,7 @@ class _ValidateMeetingState extends State<ValidateMeeting> {
     }
 
     for (int i = 0; i < widget.selectedParts.length; i++) {
-      if (widget.invalidParts
-          .where((element) => element['id'] == widget.selectedParts[i]['id'])
-          .isNotEmpty) {
+      if (widget.invalidParts.contains(widget.selectedParts[i]['id'])) {
         common.add(widget.selectedParts[i]);
       }
     }
@@ -89,7 +90,7 @@ class _ValidateMeetingState extends State<ValidateMeeting> {
 
         // Navigator.pop(context);
 
-        sendMessage();
+        // sendMessage();
         // Navigator.pushNamed(context, '/landing');
         Future.delayed(const Duration(milliseconds: 500), () {
           Navigator.of(context).pushNamedAndRemoveUntil(

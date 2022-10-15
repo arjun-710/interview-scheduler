@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:interview_scheduler/Components/ListParticipants.dart';
-import 'package:interview_scheduler/Screens/EditParticipants.dart';
+import 'package:interview_scheduler/Components/SelectPart.dart';
 import 'package:interview_scheduler/Screens/Layout.dart';
 import 'package:interview_scheduler/constants.dart';
 import 'package:intl/intl.dart';
@@ -53,11 +53,11 @@ class ViewDetails extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => EditPart(
+                  builder: (context) => SelectPart(
                       startTimeStamp: startDate,
                       endTimeStamp: endDate,
                       title: title,
-                      id: id,
+                      currentMeetingId: id,
                       already: already),
                 ),
               );
